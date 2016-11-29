@@ -1,0 +1,31 @@
+{% extends 'myapp/base.html' %}
+{% block content %}
+<h4>Would you like to know weather? Just search in input city like 'kiev' and submit</h4>
+<form action="{% url 'search-town' %}" method="post" ng-submit="searchCity($event)">
+    <input type="text" name="city" ng-model="city">
+    <button class="btn waves-effect waves-light" type="submit" name="action">Submit
+        <i class="material-icons right">send</i>
+    </button>
+</form>
+<div id="demo">
+
+    <!-- Responsive table starts here -->
+    <!-- For correct display on small screens you must add 'data-title' to each 'td' in your table -->
+    <div class="table-responsive-vertical responsive-table">
+        <!-- Table starts here -->
+        <table id="table" class="table table-hover table-mc-light-blue" ng-show="result!=null">
+            <thead>
+            <tr>
+                <th ng-repeat="(key, value) in result">@@key@@</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td ng-repeat="(key, value) in result" data-title="@@key@@">@@value@@</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<!---->
+{% endblock %}
