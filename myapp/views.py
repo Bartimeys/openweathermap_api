@@ -1,105 +1,125 @@
 import json
 
 import requests
-from django.shortcuts import render
-from django.views.generic import CreateView
-from django.views.generic import FormView
-from django.views.generic import UpdateView
-from django.views.generic import View
+from django.core import serializers
 from django.http import JsonResponse
+from django.shortcuts import render
+from django.urls import reverse_lazy
+from django.views.generic import DetailView
+from django.views.generic import ListView
+from django.views.generic import TemplateView
+from django.views.generic import View
 
-from django.views.generic.edit import CreateView
-from myapp.models import Weather
+from myapp.models import Weather, City
 
 
 class SearchCityView(View):
 
-    model = Weather
-    fields = ['city','latitude','longitude','time','temperature','temperature_day','temperature_night','wind','cloudiness','pressure','description']
+    template_name = 'myapp/search.html'
+    success_url = reverse_lazy('search-town')
 
     def get(self, request):
         return render(request, "myapp/search.html")
 
     def post(self, request):
-        city = request.POST.get('city', '')
+
+        # get data from api
+        cityParam = request.POST.get('city', '')
+
         # http://api.openweathermap.org/data/2.5/forecast/daily?q=London&units=metric&cnt=14&appid=23b63825187c61b018c0b9b735a2d308
         url = 'http://api.openweathermap.org/data/2.5/forecast/daily?q={0}&units=metric&cnt=14&appid={1}'
         appid = '23b63825187c61b018c0b9b735a2d308'
-        jsonData = requests.get(url.format(city, appid)).text
+        jsonData = requests.get(url.format(cityParam, appid)).text
         appData = json.loads(jsonData)
-        result = {}
-        weather = Weather()
-        for items in appData['city']:
-            if items == 'name':
-                result.update({'City': appData['city'][items]})
-                weather.city = appData['city'][items]
 
-        for lon in appData['city']['coord']:
-            if lon == 'lon':
-                result.update({'Longitude': appData['city']['coord'][lon]})
-                weather.longitude = appData['city']['coord'][lon]
+        #parse data from api
+        cities = City.objects.filter(name=appData['city']['name'])
+        if len(cities)==0:
+            city = City()
+            city.name = appData['city']['name']
+            city.longitude = appData['city']['coord']['lon']
+            city.latitude = appData['city']['coord']['lat']
+            city.save()
+        else:
+            city = cities[0]
 
-        for lat in appData['city']['coord']:
-            if lat == 'lat':
-                result.update({'Latitude': appData['city']['coord'][lat]})
-                weather.latitude = appData['city']['coord'][lat]
-
-        for key in appData['list']:
-            for t_night in key['temp']:
-                if t_night == 'night':
-                    result.update({'Temperature night': key['temp']['night']})
-                    weather.temperature_night = key['temp']['night']
-
-        for temp in appData['list']:
-            for t_max in temp['temp']:
-                if t_max == 'max':
-                    result.update({'Temperature Max': temp['temp']['max']})
-                    weather.temperature_max = temp['temp']['max']
-
-        for temp in appData['list']:
-            for t_min in temp['temp']:
-                if t_min == 'min':
-                    result.update({'Temperature Min': temp['temp']['min']})
-                    weather.temperature_min = temp['temp']['min']
-
+        weather_info = []
         for item in appData['list']:
-            for t_day in item['temp']:
-                if t_day == 'day':
-                    result.update({'Temperature day': item['temp']['day']})
-                    weather.temperature_day = item['temp']['day']
+            weather = Weather()
 
-        for press in appData['list']:
-            for p in press:
-                if p == 'pressure':
-                    result.update({'Pressure': press['pressure']})
-                    weather.pressure = press['pressure']
+            weather.city = city
+            weather.temperature_night = item['temp']['night']
+            weather.temperature_day = item['temp']['day']
+            weather.temperature_min = item['temp']['min']
+            weather.temperature_max = item['temp']['max']
+            weather.time = item['dt']
+            weather.wind = item['speed']
+            weather.cloudiness = item['clouds']
+            weather.pressure = item['pressure']
+            weather.description = item['weather'][0]['description']
 
-        for des in appData['list']:
-            for el in des['weather']:
-                for x in el:
-                    if x == 'description':
-                        result.update({'Description': el[x]})
-                        weather.description = el[x]
-        for wind in appData['list']:
-            for el in wind:
-                if el == 'speed':
-                    result.update({'Wind': wind[el]})
-                    weather.wind = wind[el]
+            weather.save()
+            weather_info.append(weather)
 
-        for clouds in appData['list']:
-            for el in clouds:
-                if el == 'clouds':
-                    result.update({'Clouds': clouds[el]})
-                    weather.cloudiness = clouds[el]
 
-        for time in appData['list']:
-            for el in time:
-                if el == 'dt':
-                    result.update({'Time': time[el]})
-                    weather.time = time[el]
 
-        response = {"Name": city, "info": result}
-        print(response)
-        weather.save()
-        return JsonResponse(response)
+        result = []
+        for weather in weather_info:
+            item = {}
+            item['name'] = city.name
+            item['longitude'] = city.longitude
+            item['latitude'] = city.latitude
+            item['temperature_night'] = weather.temperature_night
+            item['temperature_day'] = weather.temperature_day
+
+            item['temperature_min'] = weather.temperature_min
+            item['temperature_max'] = weather.temperature_max
+            item['time'] = weather.time
+            item['wind'] = weather.wind
+            item['cloudiness'] = weather.cloudiness
+            item['pressure'] = weather.pressure
+            item['description'] = weather.description
+
+            result.append(item)
+
+
+        return JsonResponse(result, safe=False)
+
+# class PressureChart(View):
+#     model = Weather
+#     template_name = 'myapp/Weather.html'
+#
+#     def get_data(self, column):
+#         query = Weather.objects.all()
+#         return getattr(query, column)
+
+class PressureChart(TemplateView):
+    template_name = 'myapp/pressure_chart.html'
+
+class GetPressureData(View):
+    paginate_by = 10
+
+    def get(self, request):
+
+        weathers = Weather.objects.all()
+        result = []
+        for weather in weathers:
+            item = {}
+            item['name'] = weather.city.name
+            item['longitude'] = weather.city.longitude
+            item['latitude'] = weather.city.latitude
+            item['temperature_night'] = weather.temperature_night
+            item['temperature_day'] = weather.temperature_day
+
+            item['temperature_min'] = weather.temperature_min
+            item['temperature_max'] = weather.temperature_max
+            item['time'] = weather.time
+            item['wind'] = weather.wind
+            item['cloudiness'] = weather.cloudiness
+            item['pressure'] = weather.pressure
+            item['description'] = weather.description
+
+            result.append(item)
+
+        return JsonResponse(result, safe=False)
 

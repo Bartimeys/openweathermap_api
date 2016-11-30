@@ -2,20 +2,21 @@ from __future__ import unicode_literals
 
 from django.db import models
 
-class Weather(models.Model):
-    id = models.IntegerField(primary_key=True)
-    city = models.CharField(verbose_name='City', max_length=200)
-    latitude = models.CharField(verbose_name='Latitude', max_length=200)
-    longitude = models.CharField(verbose_name='Longitude', max_length=200)
-    time = models.CharField(verbose_name='Time', max_length=200)
-    temperature_max = models.CharField(verbose_name='Temperature', max_length=200)
-    temperature_min = models.CharField(verbose_name='Temperature', max_length=200)
-    temperature_day = models.CharField(verbose_name='Temperature day', max_length=200)
-    temperature_night = models.CharField(verbose_name='Temperature night', max_length=200)
-    wind = models.CharField(verbose_name='Wind', max_length=200)
-    cloudiness = models.CharField(verbose_name='Cloudiness', max_length=200)
-    pressure = models.CharField(verbose_name='Pressure', max_length=200)
-    description = models.CharField(verbose_name='Description', max_length=200)
+class City(models.Model):
+    name = models.CharField(verbose_name='City', max_length=200)
+    latitude = models.FloatField(verbose_name='Latitude')
+    longitude = models.FloatField(verbose_name='Longitude')
+    # def __str__(self):
+    #     return "{0} {1}".format( self.name, self.latitude, self.longitude)
 
-    def __str__(self):
-        return "{0}".format(self.city, self.latitude, self.longitude, self.time, self.temperature, self.temperature_day, self.temperature_night, self.wind, self.cloudiness, self.pressure, self.description)
+class Weather(models.Model):
+    city = models.ForeignKey(City, on_delete=models.CASCADE)
+    time = models.IntegerField(verbose_name='Time')
+    temperature_max = models.FloatField(verbose_name='Temperature max')
+    temperature_min = models.FloatField(verbose_name='Temperature min')
+    temperature_day = models.FloatField(verbose_name='Temperature day')
+    temperature_night = models.FloatField(verbose_name='Temperature night')
+    wind = models.FloatField(verbose_name='Wind')
+    cloudiness = models.FloatField(verbose_name='Cloudiness')
+    pressure = models.FloatField(verbose_name='Pressure')
+    description = models.CharField(verbose_name='Description', max_length=200)

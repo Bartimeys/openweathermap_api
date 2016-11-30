@@ -7,24 +7,54 @@
         <i class="material-icons right">send</i>
     </button>
 </form>
+<!---->
 <div id="demo">
 
     <!-- Responsive table starts here -->
     <!-- For correct display on small screens you must add 'data-title' to each 'td' in your table -->
-    <div class="table-responsive-vertical responsive-table">
+    <div class="table-responsive-vertical responsive-table" ng-show="result!=null">
         <!-- Table starts here -->
-        <table id="table" class="table table-hover table-mc-light-blue" ng-show="result!=null">
+        <table id="table" class="table table-hover highlight responsive-table table-hover table-mc-light-blue">
             <thead>
             <tr>
-                <th ng-repeat="(key, value) in result">@@key@@</th>
+                <th>Data</th>
+                <th>City</th>
+                <th>Temperature min/max</th>
+                <th>Temperature day/night</th>
+                <th>Wind in m/sec</th>
+                <th>Cloudiness</th>
+                <th>Latitude</th>
+                <th>Latitude</th>
+                <th>Pressure</th>
+                <th>Description</th>
             </tr>
             </thead>
-            <tbody>
+            <tbody data-ng-repeat="i in result">
             <tr>
-                <td ng-repeat="(key, value) in result" data-title="@@key@@">@@value@@</td>
+                <td data-title="Data">@@[i][0]['time']* 1000 | date:'yyyy-MM-dd HH:mm:ss Z'@@</td>
+                <td data-title="City">@@[i][0]['name']@@</td>
+                <td data-title="Temperature min/max">@@[i][0]['temperature_min']@@/@@[i][0]['temperature_max']@@</td>
+                <td data-title="Temperature day/night">@@[i][0]['temperature_day']@@/@@[i][0]['temperature_night']@@
+                </td>
+                <td data-title="Wind in m/sec">@@[i][0]['wind']@@</td>
+                <td data-title="Cloudiness">@@[i][0]['cloudiness']@@</td>
+                <td data-title="Latitude">@@[i][0]['longitude']@@</td>
+                <td data-title="Latitude">@@[i][0]['latitude']@@</td>
+                <td data-title="Pressure">@@[i][0]['pressure']@@</td>
+                <td data-title="Description">@@[i][0]['description']@@</td>
             </tr>
             </tbody>
         </table>
+
+        <ul class="pagination">
+            <li class="disabled"><a href="#!"><i class="material-icons">chevron_left</i></a></li>
+            <li class="active"><a href="#!">1</a></li>
+            <li class="waves-effect"><a href="#!">2</a></li>
+            <li class="waves-effect"><a href="#!">3</a></li>
+            <li class="waves-effect"><a href="#!">4</a></li>
+            <li class="waves-effect"><a href="#!">5</a></li>
+            <li class="waves-effect"><a href="#!"><i class="material-icons">chevron_right</i></a></li>
+        </ul>
     </div>
 </div>
 <!---->
