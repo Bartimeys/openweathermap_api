@@ -1,12 +1,9 @@
 import json
 
 import requests
-from django.core import serializers
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import DetailView
-from django.views.generic import ListView
 from django.views.generic import TemplateView
 from django.views.generic import View
 
@@ -14,7 +11,6 @@ from myapp.models import Weather, City
 
 
 class SearchCityView(View):
-
     template_name = 'myapp/search.html'
     success_url = reverse_lazy('search-town')
 
@@ -32,9 +28,9 @@ class SearchCityView(View):
         jsonData = requests.get(url.format(cityParam, appid)).text
         appData = json.loads(jsonData)
 
-        #parse data from api
+        # parse data from api
         cities = City.objects.filter(name=appData['city']['name'])
-        if len(cities)==0:
+        if len(cities) == 0:
             city = City()
             city.name = appData['city']['name']
             city.longitude = appData['city']['coord']['lon']
@@ -61,8 +57,6 @@ class SearchCityView(View):
             weather.save()
             weather_info.append(weather)
 
-
-
         result = []
         for weather in weather_info:
             item = {}
@@ -82,8 +76,8 @@ class SearchCityView(View):
 
             result.append(item)
 
-
         return JsonResponse(result, safe=False)
+
 
 # class PressureChart(View):
 #     model = Weather
@@ -96,11 +90,11 @@ class SearchCityView(View):
 class PressureChart(TemplateView):
     template_name = 'myapp/pressure_chart.html'
 
+
 class GetPressureData(View):
     paginate_by = 10
 
     def get(self, request):
-
         weathers = Weather.objects.all()
         result = []
         for weather in weathers:
@@ -122,4 +116,3 @@ class GetPressureData(View):
             result.append(item)
 
         return JsonResponse(result, safe=False)
-

@@ -1,7 +1,6 @@
 from django.conf.urls import url
-from myapp.views import SearchCityView, PressureChart, GetPressureData
 
-from . import views
+from myapp.views import SearchCityView, PressureChart, GetPressureData
 
 urlpatterns = [
     url(r'^myapp/$', SearchCityView.as_view(), name='search-town'),
